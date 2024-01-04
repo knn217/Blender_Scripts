@@ -19,7 +19,8 @@ right_chest = [0, 0]
 head = [0, 0]
 torso_high = [0, 0]
 torso_low = [0, 0]
-collision = [0, 0]
+pos = [0, 0]
+speed = [0, 0]
 
 
 def iterate_through_actions(object):
@@ -36,8 +37,10 @@ def iterate_through_actions(object):
             bpy.context.object.animation_data.action = action
             
             if action.name.endswith((
-            'idle_', 'walk_forward_', 'walk_backward_', 
-            'crouch_', 'crawl_forward_', 'crawl_backward_'
+            'crouch_', 'run_forward_', 'ledge_grab_'
+            )) or action.name.startswith((
+            'idle_', 'walk_', 'crawl_',
+            'short_hop_', 'jump_' 
             )):
                 start_frame = 1
                 end_frame = 2
@@ -48,6 +51,11 @@ def iterate_through_actions(object):
                 text += "const int16_t char01_" + action.name[:-1] + "[" + str(end_frame-1) + "][2][16] = { "
             #print(text)
             
+            
+            speed = [0, 0]
+            accel = [0, 0]
+            veloc = [0, 0]
+            pos = [0, 0]
             for i in range(start_frame, end_frame):
                 print(i)
                 bpy.context.scene.frame_set(i)             
@@ -143,11 +151,27 @@ def iterate_through_actions(object):
                         torso_low[0] = (global_location[1] * 1000)
                         torso_low[1] = (global_location[2] * 1000)
                         
-                    # collision
-                    if bone.name.endswith(('spine.002')):
+                    # speed
+                    if bone.name.startswith(('speed')):
                         global_location = bpy.context.object.matrix_world @ bone.matrix @ bone.location
-                        collision[0] = (global_location[1] * 1000)
-                        collision[1] = (global_location[2] * 1000)
+                        # if the foot is on the ground
+                        #if global_location[2] <= 0:
+                        
+                        accel[0] = (global_location[1] * 1000) - pos[0] - veloc[0]
+                        veloc[0] = (global_location[1] * 1000) - pos[0]
+                        pos[0] = (global_location[1] * 1000)
+                        #pos[1] = (global_location[2] * 1000)
+                    
+                            
+                            
+                #if i == 1:
+                #    speed = [0, 0]
+                #else:
+                #    speed[0] = veloc[0]
+                #    speed[1] = veloc[1]
+                    
+                speed[0] = accel[0]
+                speed[1] = accel[1]
 
                 
                 # "left" actually means front because of the direction 
@@ -162,8 +186,6 @@ def iterate_through_actions(object):
                 text+= str(int(right_knee[0])) + ", "
                 text+= str(int(left_hip[0])) + ", "
                 text+= str(int(right_hip[0])) + ", "
-                text+= str(int(torso_high[0])) + ", "
-                text+= str(int(torso_low[0])) + ", "
                 text+= str(int(left_hand[0])) + ", "
                 text+= str(int(right_hand[0])) + ", "
                 text+= str(int(left_elbow[0])) + ", "
@@ -171,7 +193,9 @@ def iterate_through_actions(object):
                 text+= str(int(left_chest[0])) + ", "
                 text+= str(int(right_chest[0])) + ", "
                 text+= str(int(head[0])) + ", "
-                text+= str(int(collision[0]))
+                text+= str(int(torso_high[0])) + ", "
+                text+= str(int(torso_low[0])) + ", "
+                text+= str(int(speed[0]))
                 text+= " }, { "
                 text+= str(int(left_foot[1])) + ", "
                 text+= str(int(right_foot[1])) + ", "
@@ -179,8 +203,6 @@ def iterate_through_actions(object):
                 text+= str(int(right_knee[1])) + ", "
                 text+= str(int(left_hip[1])) + ", "
                 text+= str(int(right_hip[1])) + ", "
-                text+= str(int(torso_high[1])) + ", "
-                text+= str(int(torso_low[1])) + ", "
                 text+= str(int(left_hand[1])) + ", "
                 text+= str(int(right_hand[1])) + ", "
                 text+= str(int(left_elbow[1])) + ", "
@@ -188,7 +210,9 @@ def iterate_through_actions(object):
                 text+= str(int(left_chest[1])) + ", "
                 text+= str(int(right_chest[1])) + ", "
                 text+= str(int(head[1])) + ", "
-                text+= str(int(collision[1]))
+                text+= str(int(torso_high[1])) + ", "
+                text+= str(int(torso_low[1])) + ", "
+                text+= str(int(speed[1]))
                 text+= " } },"
             text+= "  }; \n" 
                 

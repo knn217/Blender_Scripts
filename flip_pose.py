@@ -231,7 +231,6 @@ def iterate_through_actions(object):
             flipped_action = create_flipped_action(trimmed_action, 'X')
                  
 
-
 # If there are many armatures in the scene
 for obj in bpy.data.objects:
     if obj.type != 'ARMATURE':
